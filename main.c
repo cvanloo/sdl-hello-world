@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     struct timespec now, last_rect_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &last_rect_time);
     uint8_t hit = 0;
-    uint8_t lifes = 3;
+    uint8_t lives = 3;
     double time_left_sec = STARTING_DIFFICULTY;
 
     while (1) {
@@ -93,8 +93,8 @@ int main(int argc, char **argv) {
         clock_gettime(CLOCK_MONOTONIC_RAW, &now);
         if (now.tv_sec - last_rect_time.tv_sec > time_left_sec) {
             SDL_Log("life lost");
-            --lifes;
-            if (lifes == 0) goto exit;
+            --lives;
+            if (lives == 0) goto exit;
             last_rect_time = now;
             cat_rect.x = rand() % (WINDOW_WIDTH - 100);
             cat_rect.y = rand() % (WINDOW_HEIGHT - 100);
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 
         // draw score
         char text[33];
-        snprintf(text, 33, "Score: %d, Lifes: %d, Time: %.2f", score, lifes, time_left_sec);
+        snprintf(text, 33, "Score: %d, Lives: %d, Time: %.2f", score, lives, time_left_sec);
         SDL_Texture *message_texture;
         create_text(renderer, 100, 100, text, &message_texture, &message_rect);
         SDL_RenderCopy(renderer, message_texture, 0, &message_rect);
