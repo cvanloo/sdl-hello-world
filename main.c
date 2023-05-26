@@ -1,4 +1,5 @@
 /* Compile:
+ * paru -Syu sdl2_ttf sdl2
  * gcc -o catamole main.c -lSDL2 -lSDL2_ttf -g
  */
 
@@ -54,10 +55,13 @@ int main(int argc, char **argv) {
     SDL_Rect message_rect;
     SDL_Rect cat_rect;
     cat_rect.w = cat_rect.h = 100;
+    cat_rect.x = rand() % (WINDOW_WIDTH - 100);
+    cat_rect.y = rand() % (WINDOW_HEIGHT - 100);
     uint32_t score = 0;
     struct timespec now, last_rect_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &last_rect_time);
     uint8_t hit = 0;
+    uint8_t lifes = 3;
 
     while (1) {
         SDL_Event event;
@@ -76,11 +80,28 @@ int main(int argc, char **argv) {
                 int x, y;
                 SDL_GetMouseState(&x, &y);
                 if (x >= cat_rect.x && x <= cat_rect.x + 100 && y >= cat_rect.y && y <= cat_rect.y + 100) {
-                    ++score;
                     hit = 1;
                 }
             }
             break;
+        }
+
+        // update game state
+        clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+        if (now.tv_sec - last_rect_time.tv_sec > 1) {
+            SDL_Log("life lost");
+            --lifes;
+            if (lifes == 0) goto exit;
+            last_rect_time = now;
+            cat_rect.x = rand() % (WINDOW_WIDTH - 100);
+            cat_rect.y = rand() % (WINDOW_HEIGHT - 100);
+        } else if (hit) {
+            SDL_Log("hit");
+            hit = 0;
+            ++score;
+            last_rect_time = now;
+            cat_rect.x = rand() % (WINDOW_WIDTH - 100);
+            cat_rect.y = rand() % (WINDOW_HEIGHT - 100);
         }
 
         // draw background
@@ -88,21 +109,12 @@ int main(int argc, char **argv) {
         SDL_RenderClear(renderer);
 
         // draw score
-        char text[10];
-        snprintf(text, 10, "Score: %d", score);
+        char text[22];
+        snprintf(text, 22, "Score: %d, Lifes: %d", score, lifes);
         SDL_Texture *message_texture;
         create_text(renderer, 100, 100, text, &message_texture, &message_rect);
         SDL_RenderCopy(renderer, message_texture, 0, &message_rect);
         SDL_DestroyTexture(message_texture);
-
-        // conditionally update cat position
-        clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-        if (hit || now.tv_sec - last_rect_time.tv_sec > 0.1) {
-            hit = 0;
-            last_rect_time = now;
-            cat_rect.x = rand() % (WINDOW_WIDTH - 100);
-            cat_rect.y = rand() % (WINDOW_HEIGHT - 100);
-        }
 
         // draw cat
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
